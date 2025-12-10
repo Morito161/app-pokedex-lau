@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var loadingProgressBar: ProgressBar
     private lateinit var errorTextView: TextView
     private lateinit var toolbar: Toolbar
+    private lateinit var toolbarTitle: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,12 +40,12 @@ class MainActivity : ComponentActivity() {
         loadingProgressBar = findViewById(R.id.loading_progress_bar)
         errorTextView = findViewById(R.id.error_text_view)
         toolbar = findViewById(R.id.toolbar)
+        toolbarTitle = findViewById(R.id.toolbar_title)
 
         // Configuración inicial del RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         // Configuración de la barra de herramientas
-        toolbar.title = "Lista de Pokémon"
         // Configura el listener para el botón de navegación (Atrás)
         toolbar.setNavigationOnClickListener {
             if (viewModel.selectedPokemon.value != null) {
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
                 // Volver a la Lista
                 recyclerView.isVisible = true
                 detailView.isVisible = false
-                toolbar.title = "Lista de Pokémon"
+                toolbarTitle.text = getString(R.string.app_name)
                 // El 'navigationIcon' debe ser nulo o un color transparente si no tienes ícono atrás
                 toolbar.navigationIcon = null
             } else {
@@ -101,7 +102,7 @@ class MainActivity : ComponentActivity() {
                 displayPokemonDetail(detail)
                 recyclerView.isVisible = false
                 detailView.isVisible = true
-                toolbar.title = detail.name.replaceFirstChar { it.uppercase() }
+                toolbarTitle.text = detail.name.replaceFirstChar { it.uppercase() }
                 // Muestra un ícono de flecha atrás. NOTA: Debes tener este recurso en 'res/drawable'
                 // Reemplaza 'R.drawable.ic_back' con un ícono real si el IDE no lo sugiere.
                 toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
