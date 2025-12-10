@@ -78,6 +78,18 @@
                 android:contentDescription="Imagen del Pokémon"
                 tools:src="@tools:sample/avatars" />
 
+            <!-- Botón de Sonido -->
+            <ImageButton
+                android:id="@+id/play_cry_button"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@android:drawable/ic_media_play"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="#4CAF50"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/detail_pokemon_name"
+                app:layout_constraintBottom_toBottomOf="@+id/detail_pokemon_id"/>
+
             <!-- Nombre y ID -->
             <TextView
                 android:id="@+id/detail_pokemon_name"
@@ -89,7 +101,7 @@
                 android:textColor="@android:color/black"
                 app:layout_constraintTop_toBottomOf="@id/detail_pokemon_image"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/play_cry_button"
                 tools:text="Bulbasaur" />
 
             <TextView
@@ -100,7 +112,7 @@
                 android:textColor="#3F51B5"
                 app:layout_constraintTop_toBottomOf="@id/detail_pokemon_name"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/play_cry_button"
                 tools:text="ID: #1" />
 
             <!-- Separador -->
@@ -135,6 +147,31 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 tools:text="Peso: 6.9 kg" />
+
+            <!-- Descripción del Pokémon -->
+            <TextView
+                android:id="@+id/detail_pokemon_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/darker_gray"
+                app:layout_constraintTop_toBottomOf="@id/detail_weight"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="Una extraña semilla fue plantada en su espalda al nacer. La planta brota y crece con este Pokémon." />
+
+            <!-- Botón de Regresar -->
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Regresar"
+                android:backgroundTint="#F44336"
+                app:layout_constraintTop_toBottomOf="@id/detail_pokemon_description"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

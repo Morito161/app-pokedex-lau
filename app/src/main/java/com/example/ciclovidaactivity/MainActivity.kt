@@ -1,8 +1,12 @@
 package com.example.ciclovidaactivity
 
-
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -15,6 +19,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
@@ -28,6 +33,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var errorTextView: TextView
     private lateinit var toolbar: Toolbar
     private lateinit var toolbarTitle: TextView
+
+    // MediaPlayer para el sonido
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +81,6 @@ class MainActivity : ComponentActivity() {
             if (isLoading) {
                 // Ocultar contenido mientras carga
                 errorTextView.isVisible = false
-                // No ocultamos el recycler/detalle porque podríamos estar cargando el detalle de un solo ítem
             }
         })
 
@@ -95,42 +102,84 @@ class MainActivity : ComponentActivity() {
                 recyclerView.isVisible = true
                 detailView.isVisible = false
                 toolbarTitle.text = getString(R.string.app_name)
-                // El 'navigationIcon' debe ser nulo o un color transparente si no tienes ícono atrás
                 toolbar.navigationIcon = null
+                // Detener y liberar el MediaPlayer al salir de la vista de detalle
+                mediaPlayer?.release()
+                mediaPlayer = null
             } else {
                 // Mostrar Detalle
                 displayPokemonDetail(detail)
                 recyclerView.isVisible = false
                 detailView.isVisible = true
                 toolbarTitle.text = detail.name.replaceFirstChar { it.uppercase() }
-                // Muestra un ícono de flecha atrás. NOTA: Debes tener este recurso en 'res/drawable'
-                // Reemplaza 'R.drawable.ic_back' con un ícono real si el IDE no lo sugiere.
                 toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
             }
         })
     }
 
     private fun displayPokemonDetail(detail: PokemonDetail) {
-        // Obtener referencias a las vistas de detalle (que están en activity_main.xml)
+        // Obtener referencias a las vistas de detalle
         val nameDetail = findViewById<TextView>(R.id.detail_pokemon_name)
         val idDetail = findViewById<TextView>(R.id.detail_pokemon_id)
         val imageDetail = findViewById<ImageView>(R.id.detail_pokemon_image)
         val heightDetail = findViewById<TextView>(R.id.detail_height)
         val weightDetail = findViewById<TextView>(R.id.detail_weight)
+        val descriptionDetail = findViewById<TextView>(R.id.detail_pokemon_description)
+        val playCryButton = findViewById<ImageButton>(R.id.play_cry_button)
+        val backButton = findViewById<Button>(R.id.back_button)
 
-        // Asignar datos. Conversión: Decímetros -> Metros (dividir por 10), Hectogramos -> Kilogramos (dividir por 10)
+        // Asignar datos
         nameDetail.text = detail.name.replaceFirstChar { it.uppercase() }
         idDetail.text = "ID: #${detail.id}"
         heightDetail.text = "Altura: ${detail.height / 10.0} m"
         weightDetail.text = "Peso: ${detail.weight / 10.0} kg"
+        descriptionDetail.text = detail.description
 
-        // Cargar imagen con Coil.
+        // Cargar imagen con Coil
         imageDetail.load(detail.getImageUrl()) {
-            // Placeholder y Error son opcionales, pero recomendados para una buena UX
-            // Usamos un color simple como fallback si no hay un drawable
             placeholder(android.R.color.darker_gray)
             error(android.R.color.holo_red_dark)
             crossfade(true)
         }
+
+        // Configurar el botón de sonido
+        playCryButton.setOnClickListener {
+            playPokemonCry(detail.cries.latest)
+        }
+
+        // Configurar el botón de regresar
+        backButton.backgroundTintList = ColorStateList.valueOf(Color.RED)
+        backButton.setOnClickListener {
+            viewModel.clearSelection()
+        }
+    }
+
+    private fun playPokemonCry(url: String) {
+        // Detener cualquier reproducción anterior
+        mediaPlayer?.release()
+        mediaPlayer = null
+
+        mediaPlayer = MediaPlayer().apply {
+            try {
+                setDataSource(url)
+                prepareAsync() // Preparar de forma asíncrona para no bloquear el hilo principal
+                setOnPreparedListener {
+                    start()
+                }
+                setOnErrorListener { _, _, _ ->
+                    Toast.makeText(this@MainActivity, "No se pudo reproducir el sonido.", Toast.LENGTH_SHORT).show()
+                    true
+                }
+            } catch (e: IOException) {
+                Toast.makeText(this@MainActivity, "Error al cargar el sonido.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Liberar el MediaPlayer cuando la actividad ya no es visible
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }

@@ -3,9 +3,11 @@ package com.example.ciclovidaactivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 
 // Interfaz para manejar el clic en un elemento de la lista
 class PokemonAdapter(
@@ -18,6 +20,7 @@ class PokemonAdapter(
         val nameTextView: TextView = view.findViewById(R.id.pokemon_name_text)
         val cardView: CardView = view.findViewById(R.id.pokemon_card_view)
         val idTextView: TextView = view.findViewById(R.id.pokemon_id_text)
+        val imageView: ImageView = view.findViewById(R.id.pokemon_image_view)
     }
 
     // Infla el layout del ítem para crear un ViewHolder
@@ -34,6 +37,13 @@ class PokemonAdapter(
         // Muestra el nombre con la primera letra en mayúscula
         holder.nameTextView.text = pokemon.name.replaceFirstChar { it.uppercase() }
         holder.idTextView.text = "#${pokemon.getId() ?: "???"}" // Muestra el ID
+
+        // Cargar imagen con Coil.
+        holder.imageView.load(pokemon.getImageUrl()) {
+            placeholder(android.R.color.darker_gray)
+            error(android.R.color.holo_red_dark)
+            crossfade(true)
+        }
 
         // Configura el evento de clic en la tarjeta
         holder.cardView.setOnClickListener {

@@ -12,35 +12,29 @@ class PokemonViewModel : ViewModel() {
     private val BASE_URL = "https://pokeapi.co/api/v2/"
 
     // 1. Inicialización de Retrofit
-    // Creamos una instancia de Retrofit y la interfaz PokeApiService.
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     private val apiService: PokeApiService = retrofit.create(PokeApiService::class.java)
 
-    // 2. LiveData (Datos observables)
-    // Estos objetos notifican a la UI cada vez que los datos cambian.
-    val pokemonList = MutableLiveData<List<PokemonRef>>() // Lista para el RecyclerView
-    val selectedPokemon = MutableLiveData<PokemonDetail?>() // Detalle del Pokémon seleccionado
-    val isLoading = MutableLiveData<Boolean>() // Indica si hay una llamada de red activa
-    val error = MutableLiveData<String?>() // Mensajes de error
+    // 2. LiveData
+    val pokemonList = MutableLiveData<List<PokemonRef>>()
+    val selectedPokemon = MutableLiveData<PokemonDetail?>()
+    val isLoading = MutableLiveData<Boolean>()
+    val error = MutableLiveData<String?>()
 
     init {
-        // Al crear el ViewModel, iniciamos la carga de la lista
         fetchPokemonList()
     }
 
-    // Función para obtener la lista inicial de Pokémon
     private fun fetchPokemonList() {
         isLoading.value = true
         error.value = null
-
-        // Ejecutamos la llamada en un Coroutine Scope asociado al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 val response = apiService.getPokemonList()
-                pokemonList.value = response.results // Actualiza LiveData con la lista
+                pokemonList.value = response.results
             } catch (e: Exception) {
                 Log.e("PokeViewModel", "Error al obtener lista: ${e.message}")
                 error.value = "Error al cargar la lista de Pokémon: ${e.message}"
@@ -50,32 +44,40 @@ class PokemonViewModel : ViewModel() {
         }
     }
 
-    // Función para obtener el detalle de un Pokémon al hacer clic
     fun selectPokemon(pokemonRef: PokemonRef) {
-        val id = pokemonRef.getId()
-        if (id == null) {
-            error.value = "ID de Pokémon no válido."
-            return
-        }
+        val id = pokemonRef.getId() ?: return
 
         isLoading.value = true
         error.value = null
-        selectedPokemon.value = null // Limpiar el detalle anterior
+        selectedPokemon.value = null
 
         viewModelScope.launch {
             try {
+                // 1. Obtener detalles básicos
                 val detail = apiService.getPokemonDetail(id)
-                selectedPokemon.value = detail // Actualiza LiveData con el detalle
+
+                // 2. Obtener descripción (especie)
+                val species = apiService.getPokemonSpecies(id)
+
+                // 3. Buscar la descripción en español
+                val spanishDescription = species.flavorTextEntries
+                    .firstOrNull { it.language.name == "es" }?.flavorText
+
+                // 4. Limpiar el texto (reemplazar saltos de línea)
+                detail.description = spanishDescription?.replace('\n', ' ') ?: "No se encontró descripción en español."
+
+                // 5. Actualizar el LiveData
+                selectedPokemon.postValue(detail) // usamos postValue para seguridad entre hilos
+
             } catch (e: Exception) {
-                Log.e("PokeViewModel", "Error al obtener detalle: ${e.message}")
-                error.value = "Error al cargar el detalle de ${pokemonRef.name}: ${e.message}"
+                Log.e("PokeViewModel", "Error al obtener detalle o especie: ${e.message}")
+                error.value = "Error al cargar datos de ${pokemonRef.name}: ${e.message}"
             } finally {
                 isLoading.value = false
             }
         }
     }
 
-    // Función para volver a la lista (limpiar el detalle)
     fun clearSelection() {
         selectedPokemon.value = null
     }
